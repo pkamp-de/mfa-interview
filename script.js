@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalPercentage = document.getElementById('total-percentage');
     const interviewNotes = document.getElementById('interview-notes');
     const exportTxtBtn = document.getElementById('export-txt');
+    const exportPdfBtn = document.getElementById('export-pdf');
     const applicantName = document.getElementById('applicant-name');
     const interviewDate = document.getElementById('interview-date');
     const collapseBtns = document.querySelectorAll('.collapse-btn');
@@ -57,7 +58,76 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('interviewDate', this.value);
     });
 
-    // Export-Funktionalität
+    // PDF Export Funktionalität
+    exportPdfBtn.addEventListener('click', function() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Standardschriftart und -größe
+        doc.setFont('helvetica');
+        
+        // Kopfzeile
+        doc.setFontSize(18);
+        doc.text('MFA Interview-Bewertung', 20, 20);
+        doc.setFontSize(12);
+        doc.text('GIG - Kardiologische Praxis', 20, 30);
+        
+        // Bewerberdaten
+        doc.setFontSize(12);
+        doc.text(`Name der Bewerberin: ${applicantName.value || '[Nicht angegeben]'}`, 20, 45);
+        doc.text(`Datum des Gesprächs: ${interviewDate.value || '[Nicht angegeben]'}`, 20, 55);
+
+        // Bewertungen für jeden Bereich
+        let yPosition = 70;
+        document.querySelectorAll('.interview-section').forEach(section => {
+            // Seitenumbruch, wenn weniger als 40 Einheiten Platz
+            if (yPosition > 250) {
+                doc.addPage();
+                yPosition = 20;
+            }
+
+            const title = section.querySelector('h2').textContent;
+            const rating = section.querySelector('.rating-value').textContent;
+            
+            doc.setFontSize(11);
+            doc.text(title, 20, yPosition);
+            doc.text(`Bewertung: ${rating}/10`, 20, yPosition + 7);
+            
+            yPosition += 20;
+        });
+
+        // Gesamtbewertung
+        if (yPosition > 250) {
+            doc.addPage();
+            yPosition = 20;
+        }
+        
+        doc.setFontSize(14);
+        doc.text('Gesamtbewertung:', 20, yPosition);
+        doc.setFontSize(12);
+        doc.text(totalPercentage.textContent, 20, yPosition + 7);
+
+        // Notizen
+        yPosition += 20;
+        if (yPosition > 250) {
+            doc.addPage();
+            yPosition = 20;
+        }
+        
+        doc.setFontSize(14);
+        doc.text('Notizen:', 20, yPosition);
+        doc.setFontSize(12);
+        
+        // Notizen in Zeilen aufteilen und hinzufügen
+        const splitNotes = doc.splitTextToSize(interviewNotes.value || '[Keine Notizen]', 170);
+        doc.text(splitNotes, 20, yPosition + 7);
+
+        // PDF speichern
+        const fileName = `MFA_Interview_${(applicantName.value || 'Unbenannt').replace(/\\s+/g, '_')}_${interviewDate.value || 'kein_datum'}.pdf`;
+        doc.save(fileName);
+    });
+
+    // Text Export Funktionalität
     exportTxtBtn.addEventListener('click', function() {
         // Erstelle den Textinhalt für die Exportdatei
         let exportContent = `MFA Interview-Bewertung\n`;
@@ -83,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Erstelle und triggere den Download
         const blob = new Blob([exportContent], { type: 'text/plain;charset=utf-8' });
-        const fileName = `MFA_Interview_${(applicantName.value || 'Unbenannt').replace(/\s+/g, '_')}_${interviewDate.value || 'kein_datum'}.txt`;
+        const fileName = `MFA_Interview_${(applicantName.value || 'Unbenannt').replace(/\\s+/g, '_')}_${interviewDate.value || 'kein_datum'}.txt`;
         
         if (window.navigator.msSaveOrOpenBlob) {
             window.navigator.msSaveBlob(blob, fileName);
