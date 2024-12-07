@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Bestehende Variablen-Deklarationen...
     const ratingSliders = document.querySelectorAll('.rating-slider');
     const ratingValues = document.querySelectorAll('.rating-value');
     const totalPercentage = document.getElementById('total-percentage');
@@ -11,6 +10,62 @@ document.addEventListener('DOMContentLoaded', function() {
     const collapseBtns = document.querySelectorAll('.collapse-btn');
 
     let ratings = {};
+
+    // Slider Event Listener
+    ratingSliders.forEach((slider, index) => {
+        slider.addEventListener('input', function() {
+            const valueDisplay = ratingValues[index];
+            valueDisplay.textContent = this.value;
+            const sectionId = this.dataset.section;
+            ratings[sectionId] = parseInt(this.value);
+            updateTotalScore();
+            saveData();
+        });
+    });
+
+    // Gesamtwertung berechnen und anzeigen
+    function updateTotalScore() {
+        const values = Object.values(ratings);
+        if (values.length === 0) return;
+
+        const sum = values.reduce((acc, val) => acc + val, 0);
+        const maxPossibleScore = 7 * 10; // 7 Bereiche, max. 10 Punkte
+        const percentage = (sum / maxPossibleScore) * 100;
+        const roundedPercentage = Math.round(percentage);
+
+        totalPercentage.textContent = roundedPercentage + '%';
+        
+        // Farbe basierend auf Prozentsatz
+        if (roundedPercentage >= 80) {
+            totalPercentage.className = 'score-green';
+        } else if (roundedPercentage < 60) {
+            totalPercentage.className = 'score-red';
+        } else {
+            totalPercentage.className = '';
+        }
+    }
+
+    // Daten speichern
+    function saveData() {
+        localStorage.setItem('ratings', JSON.stringify(ratings));
+    }
+
+    // Gespeicherte Daten laden
+    function loadStoredData() {
+        const storedRatings = localStorage.getItem('ratings');
+        if (storedRatings) {
+            ratings = JSON.parse(storedRatings);
+            ratingSliders.forEach(slider => {
+                const sectionId = slider.dataset.section;
+                if (ratings[sectionId]) {
+                    slider.value = ratings[sectionId];
+                    const index = Array.from(ratingSliders).indexOf(slider);
+                    ratingValues[index].textContent = ratings[sectionId];
+                }
+            });
+            updateTotalScore();
+        }
+    }
 
     // PDF Export Funktionalität
     exportPdfBtn.addEventListener('click', async function() {
@@ -90,5 +145,6 @@ document.addEventListener('DOMContentLoaded', function() {
         doc.save(fileName);
     });
 
-    // Bestehende Event Listener und Funktionen bleiben erhalten...
+    // Initial load
+    loadStoredData();
 });
