@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Bestehende Variablen-Deklarationen...
     const ratingSliders = document.querySelectorAll('.rating-slider');
     const ratingValues = document.querySelectorAll('.rating-value');
     const totalPercentage = document.getElementById('total-percentage');
@@ -11,22 +12,83 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let ratings = {};
 
-    // Collapse Button Funktionalität
-    collapseBtns.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const collapsible = this.closest('.collapsible');
-            collapsible.classList.toggle('active');
-            
-            // Icon drehen
-            const icon = this.querySelector('.collapse-icon');
-            if (collapsible.classList.contains('active')) {
-                icon.textContent = '▲';
-            } else {
-                icon.textContent = '▼';
+    // PDF Export Funktionalität
+    exportPdfBtn.addEventListener('click', async function() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        try {
+            // Logo laden und einfügen
+            const response = await fetch('./GIG_LogoText.svg');
+            const svgData = await response.text();
+            const svgBase64 = btoa(unescape(encodeURIComponent(svgData)));
+            doc.addImage('data:image/svg+xml;base64,' + svgBase64, 'SVG', 20, 10, 40, 15);
+        } catch (error) {
+            console.warn('Logo konnte nicht geladen werden:', error);
+        }
+
+        // Überschriften
+        doc.setFontSize(18);
+        doc.text('MFA Interview-Bewertung', 70, 20);
+        doc.setFontSize(12);
+        doc.text('Kardiologische Praxis', 70, 27);
+
+        // Trennlinie
+        doc.setDrawColor(22, 65, 148); // GIG-Blau
+        doc.setLineWidth(0.5);
+        doc.line(20, 35, 190, 35);
+
+        // Bewerberdaten
+        doc.text(`Name der Bewerberin: ${applicantName.value || '[Nicht angegeben]'}`, 20, 45);
+        doc.text(`Datum des Gesprächs: ${interviewDate.value || '[Nicht angegeben]'}`, 20, 52);
+
+        // Bewertungen
+        let yPos = 65;
+        document.querySelectorAll('.interview-section').forEach((section) => {
+            if (yPos > 250) {
+                doc.addPage();
+                yPos = 20;
             }
+
+            const title = section.querySelector('h2').textContent;
+            const rating = section.querySelector('.rating-value').textContent;
+
+            doc.setFontSize(11);
+            doc.text(title, 20, yPos);
+            doc.text(`${rating}/10`, 150, yPos);
+
+            yPos += 10;
         });
+
+        // Gesamtbewertung
+        yPos += 10;
+        if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+        }
+
+        doc.setFontSize(14);
+        doc.text('Gesamtbewertung:', 20, yPos);
+        doc.text(totalPercentage.textContent, 150, yPos);
+
+        // Notizen
+        yPos += 15;
+        if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+        }
+
+        doc.setFontSize(14);
+        doc.text('Notizen:', 20, yPos);
+        doc.setFontSize(11);
+        const notesText = interviewNotes.value || '[Keine Notizen]';
+        const splitNotes = doc.splitTextToSize(notesText, 150);
+        doc.text(splitNotes, 20, yPos + 8);
+
+        // PDF speichern
+        const fileName = `MFA_Interview_${(applicantName.value || 'Unbenannt').replace(/\s+/g, '_')}_${interviewDate.value || 'kein_datum'}.pdf`;
+        doc.save(fileName);
     });
 
-    // Rest der Funktionen...
+    // Bestehende Event Listener und Funktionen bleiben erhalten...
 });
