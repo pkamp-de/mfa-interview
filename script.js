@@ -11,18 +11,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let ratings = {};
 
-    ratingSliders.forEach((slider, index) => {
-        slider.addEventListener('input', function() {
-            const valueDisplay = ratingValues[index];
-            valueDisplay.textContent = this.value;
-            const sectionId = this.dataset.section;
-            ratings[sectionId] = parseInt(this.value);
-            updateTotalScore();
-            saveData();
+    // Collapse Button Funktionalität
+    collapseBtns.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const collapsible = this.closest('.collapsible');
+            collapsible.classList.toggle('active');
+            
+            // Icon drehen
+            const icon = this.querySelector('.collapse-icon');
+            if (collapsible.classList.contains('active')) {
+                icon.textContent = '▲';
+            } else {
+                icon.textContent = '▼';
+            }
         });
     });
 
-    // Rest des bestehenden Codes...
-
-    loadStoredData();
+    // Rest der Funktionen...
 });
