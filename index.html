@@ -6,6 +6,7 @@
     <title>MFA Interview-Leitfaden | GIG</title>
     <link rel="stylesheet" href="./styles.css">
     <link rel="manifest" href="./manifest.json">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -216,6 +217,7 @@
                     <textarea id="interview-notes" placeholder="Weitere Anmerkungen zum Gespräch..."></textarea>
                 </div>
                 <div class="export-buttons">
+                    <button id="export-pdf" class="export-btn">Als PDF speichern</button>
                     <button id="export-txt" class="export-btn">Als Text-Datei speichern</button>
                 </div>
             </section>
